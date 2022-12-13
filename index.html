@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Face Matching</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-200 relative">
+    <div class="flex flex-col justify-center items-center">
+      <div class="bg-white p-8 mt-20 rounded">
+        <label for="username" class="text-gray-800 font-bold text-xl"
+          >Enter username</label
+        >
+        <br />
+        <input
+          id="username"
+          type="text"
+          placeholder="type user name"
+          class="border bg-slate-100 p-2 rounded mr-2"
+        /><button class="border bg-blue-500 p-2 rounded text-white">
+          Submit
+        </button>
+      </div>
+    </div>
+    <div
+      id="image-holder"
+      class="mt-4 flex gap-1 justify-center items-center"
+    ></div>
+
+    <div id="info" class="text-center"></div>
+    <script type="text/javascript">
+      const Loading = `<div
+      id='loading'
+      class="flex items-center justify-center top-0 left-0 w-screen h-screen absolute bg-blue-900/20"
+    >
+      <div
+        style="border-top-color: transparent"
+        class="w-8 h-8 border-4 border-blue-600 rounded-full animate-spin"
+      ></div>
+      <p class="ml-2">Loading...</p>
+    </div>`;
+      const loadingDiv = document
+        .createRange()
+        .createContextualFragment(Loading);
+      const username = document.getElementById('username');
+      const info = document.getElementById('info');
+      const submitBtn = document.querySelector('button');
+      submitBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        try {
+          if (username.value == '' || username.value == undefined) {
+            username.classList.add('border-red-500');
+            setTimeout(() => username.classList.remove('border-red-500'), 2000);
+          }
+          document.querySelector('body').append(loadingDiv);
+          const { data } = await axios.get(
+            `http://localhost:5000/api/getImage?username=${username.value}`
+          );
+          if (data.success) {
+            info.classList.remove('text-red-500');
+          } else {
+            info.innerText =
+              'either username not exist or user does not has any profile pic or may be unavailable';
+            info.classList.add('text-red-500');
+            setTimeout(() => (info.innerText = ''), 3000);
+          }
+
+          let image = new Image();
+          let div = document.createElement('div');
+          let p = document.createElement('p');
+          p.innerText = username.value;
+          div.className = 'border border-gray-300 p-2 rounded-md';
+          image.src = data.data;
+          image.className = 'rounded shadow-md';
+          div.append(image, p);
+          image.onload = () => {
+            console.log('loaded');
+            document.getElementById('image-holder').append(div);
+          };
+          document.getElementById('loading').remove();
+        } catch (error) {
+          console.log(error.message);
+          document.getElementById('loading').remove();
+        }
+      });
+    </script>
+  </body>
+</html>
